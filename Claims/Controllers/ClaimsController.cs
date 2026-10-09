@@ -1,3 +1,4 @@
+using Claims.Contracts;
 using Claims.Domain;
 using Claims.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -22,20 +23,21 @@ public class ClaimsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult> CreateAsync(Claim claim)
+    public async Task<ActionResult> CreateAsync(CreateClaimRequest request)
     {
-        return Ok(await _claims.CreateAsync(claim));
+        return this.ToActionResult(await _claims.CreateAsync(request));
     }
 
     [HttpDelete("{id}")]
-    public async Task DeleteAsync(string id)
+    public async Task<ActionResult> DeleteAsync(string id)
     {
-        await _claims.DeleteAsync(id);
+        return this.ToActionResult(await _claims.DeleteAsync(id));
     }
 
     [HttpGet("{id}")]
-    public async Task<Claim?> GetAsync(string id)
+    public async Task<ActionResult<Claim>> GetAsync(string id)
     {
-        return await _claims.GetByIdAsync(id);
+        var claim = await _claims.GetByIdAsync(id);
+        return claim is null ? NotFound() : Ok(claim);
     }
 }

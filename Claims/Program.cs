@@ -46,6 +46,8 @@ builder.Services.AddDbContext<ClaimsContext>(options =>
 });
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<CoverRules>();
 builder.Services.AddSingleton<PremiumCalculator>();
 builder.Services.AddScoped<IClaimRepository, ClaimRepository>();
 builder.Services.AddScoped<ICoverRepository, CoverRepository>();

@@ -1,3 +1,4 @@
+using Claims.Contracts;
 using Claims.Domain;
 
 namespace Claims.Services;
@@ -7,12 +8,18 @@ public class CoverService
     private readonly ICoverRepository _covers;
     private readonly IAuditer _auditer;
     private readonly PremiumCalculator _premiumCalculator;
+    private readonly CoverRules _coverRules;
 
-    public CoverService(ICoverRepository covers, IAuditer auditer, PremiumCalculator premiumCalculator)
+    public CoverService(
+        ICoverRepository covers,
+        IAuditer auditer,
+        PremiumCalculator premiumCalculator,
+        CoverRules coverRules)
     {
         _covers = covers;
         _auditer = auditer;
         _premiumCalculator = premiumCalculator;
+        _coverRules = coverRules;
     }
 
     public decimal ComputePremium(DateTime startDate, DateTime endDate, CoverType coverType)
@@ -30,18 +37,38 @@ public class CoverService
         return await _covers.GetByIdAsync(id);
     }
 
-    public async Task<Cover> CreateAsync(Cover cover)
+    public async Task<ServiceResult<Cover>> CreateAsync(CreateCoverRequest request)
     {
-        cover.Id = Guid.NewGuid().ToString();
-        cover.Premium = _premiumCalculator.ComputePremium(cover.StartDate, cover.EndDate, cover.Type);
+        var errors = _coverRules.Validate(request.StartDate, request.EndDate);
+        if (errors.Count > 0)
+        {
+            return new ServiceResult<Cover>.Invalid(errors);
+        }
+
+        var cover = new Cover
+        {
+            Id = Guid.NewGuid().ToString(),
+            StartDate = request.StartDate,
+            EndDate = request.EndDate,
+            Type = request.Type,
+            Premium = _premiumCalculator.ComputePremium(request.StartDate, request.EndDate, request.Type)
+        };
+
         await _covers.AddAsync(cover);
         _auditer.AuditCover(cover.Id, "POST");
-        return cover;
+        return new ServiceResult<Cover>.Success(cover);
     }
 
-    public async Task DeleteAsync(string id)
+    public async Task<ServiceResult> DeleteAsync(string id)
     {
-        _auditer.AuditCover(id, "DELETE");
+        var cover = await _covers.GetByIdAsync(id);
+        if (cover is null)
+        {
+            return new ServiceResult.NotFound();
+        }
+
         await _covers.DeleteAsync(id);
+        _auditer.AuditCover(id, "DELETE");
+        return new ServiceResult.Success();
     }
 }

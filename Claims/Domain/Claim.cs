@@ -11,7 +11,6 @@ public class Claim
     public string CoverId { get; set; }
 
     [BsonElement("created")]
-    [BsonDateTimeOptions(DateOnly = true)]
     public DateTime Created { get; set; }
 
     [BsonElement("name")]

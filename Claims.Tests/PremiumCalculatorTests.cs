@@ -1,3 +1,4 @@
+using Claims.Domain;
 using Claims.Services;
 using Xunit;
 

@@ -1,3 +1,5 @@
+using Claims.Domain;
+
 namespace Claims.Services;
 
 public class PremiumCalculator

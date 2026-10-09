@@ -1,6 +1,7 @@
 using Claims.Auditing;
 using Claims.Controllers;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using MongoDB.Driver;
 using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
@@ -33,7 +34,8 @@ builder.Services
     });
 
 builder.Services.AddDbContext<AuditContext>(options =>
-    options.UseSqlServer(sqlContainer.GetConnectionString()));
+    options.UseSqlServer(sqlContainer.GetConnectionString())
+        .ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning)));
 
 builder.Services.AddDbContext<ClaimsContext>(options =>
 {

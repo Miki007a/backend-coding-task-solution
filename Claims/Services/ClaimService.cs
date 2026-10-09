@@ -68,7 +68,7 @@ public class ClaimService
         };
 
         await _claims.AddAsync(claim);
-        _auditer.AuditClaim(claim.Id, "POST");
+        await _auditer.AuditClaim(claim.Id, "POST");
         return new ServiceResult<Claim>.Success(claim);
     }
 
@@ -81,7 +81,7 @@ public class ClaimService
         }
 
         await _claims.DeleteAsync(id);
-        _auditer.AuditClaim(id, "DELETE");
+        await _auditer.AuditClaim(id, "DELETE");
         return new ServiceResult.Success();
     }
 }

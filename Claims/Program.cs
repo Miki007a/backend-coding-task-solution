@@ -1,3 +1,4 @@
+using System.Threading.Channels;
 using Claims.Infrastructure.Auditing;
 using Claims.Infrastructure.Persistence;
 using Claims.Services;
@@ -51,7 +52,13 @@ builder.Services.AddSingleton<CoverRules>();
 builder.Services.AddSingleton<PremiumCalculator>();
 builder.Services.AddScoped<IClaimRepository, ClaimRepository>();
 builder.Services.AddScoped<ICoverRepository, CoverRepository>();
-builder.Services.AddScoped<IAuditer, Auditer>();
+builder.Services.AddSingleton(Channel.CreateBounded<AuditEvent>(new BoundedChannelOptions(100)
+{
+    FullMode = BoundedChannelFullMode.Wait,
+    SingleReader = true
+}));
+builder.Services.AddSingleton<IAuditer, Auditer>();
+builder.Services.AddHostedService<AuditBackgroundService>();
 builder.Services.AddScoped<ClaimService>();
 builder.Services.AddScoped<CoverService>();
 

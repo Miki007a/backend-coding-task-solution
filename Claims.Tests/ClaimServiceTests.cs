@@ -171,14 +171,16 @@ public class ClaimServiceTests
         public int ClaimAudits { get; private set; }
         public string? LastClaimHttpMethod { get; private set; }
 
-        public void AuditClaim(string id, string httpRequestType)
+        public Task AuditClaim(string id, string httpRequestType)
         {
             ClaimAudits++;
             LastClaimHttpMethod = httpRequestType;
+            return Task.CompletedTask;
         }
 
-        public void AuditCover(string id, string httpRequestType)
+        public Task AuditCover(string id, string httpRequestType)
         {
+            return Task.CompletedTask;
         }
     }
 }

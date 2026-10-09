@@ -1,39 +1,32 @@
+using System.Threading.Channels;
 using Claims.Services;
 
 namespace Claims.Infrastructure.Auditing;
 
 public class Auditer : IAuditer
 {
-    private readonly AuditContext _auditContext;
+    private readonly Channel<AuditEvent> _channel;
+    private readonly TimeProvider _timeProvider;
 
-    public Auditer(AuditContext auditContext)
+    public Auditer(Channel<AuditEvent> channel, TimeProvider timeProvider)
     {
-        _auditContext = auditContext;
+        _channel = channel;
+        _timeProvider = timeProvider;
     }
 
-    public void AuditClaim(string id, string httpRequestType)
+    public async Task AuditClaim(string id, string httpRequestType)
     {
-        var claimAudit = new ClaimAudit()
-        {
-            Created = DateTime.Now,
-            HttpRequestType = httpRequestType,
-            ClaimId = id
-        };
-
-        _auditContext.Add(claimAudit);
-        _auditContext.SaveChanges();
+        await Enqueue(AuditTarget.Claim, id, httpRequestType);
     }
 
-    public void AuditCover(string id, string httpRequestType)
+    public async Task AuditCover(string id, string httpRequestType)
     {
-        var coverAudit = new CoverAudit()
-        {
-            Created = DateTime.Now,
-            HttpRequestType = httpRequestType,
-            CoverId = id
-        };
+        await Enqueue(AuditTarget.Cover, id, httpRequestType);
+    }
 
-        _auditContext.Add(coverAudit);
-        _auditContext.SaveChanges();
+    private async Task Enqueue(AuditTarget target, string id, string httpRequestType)
+    {
+        var audit = new AuditEvent(target, id, httpRequestType, _timeProvider.GetUtcNow().UtcDateTime);
+        await _channel.Writer.WriteAsync(audit);
     }
 }
